@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Terminbuchung</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --w: 960px;
+      --bg: #f4f6f8;
+      --card: #fff;
+      --tx: #18222b;
+      --mu: #66727d;
+      --ac: #1f6f78;
+      --ln: #dde3e8;
+      --tk: #cfd6dc;
+      --ok: #1e8e4e;
+      --wa: #f2c230;
+      --bad: #d64545;
+      --info: #3b82c4
+    }
+
+    @media(prefers-color-scheme:dark) {
+      :root:not([data-theme=light]) {
+        color-scheme: dark;
+        --bg: #12181d;
+        --card: #1a2229;
+        --tx: #e8edf1;
+        --mu: #93a0ab;
+        --ac: #4fb3bf;
+        --ln: #2b3640;
+        --tk: #3a4651;
+        --ok: #37b26c
+      }
+    }
+
+    :root[data-theme=dark] {
+      color-scheme: dark;
+      --bg: #12181d;
+      --card: #1a2229;
+      --tx: #e8edf1;
+      --mu: #93a0ab;
+      --ac: #4fb3bf;
+      --ln: #2b3640;
+      --tk: #3a4651;
+      --ok: #37b26c
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--tx);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif
+    }
+
+    header,
+    main,
+    footer {
+      width: 100%;
+      max-width: var(--w);
+      margin: 0 auto;
+      padding: 16px
+    }
+
+    main {
+      flex: 1
+    }
+
+    footer {
+      margin-top: auto
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin: 0 0 6px
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--ln);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px
+    }
+
+    button {
+      font: inherit;
+      border: 1px solid var(--ln);
+      background: var(--card);
+      color: var(--tx);
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--ac);
+      outline-offset: 2px
+    }
+
+    button:disabled {
+      cursor: not-allowed
+    }
+
+    button.p {
+      background: var(--ac);
+      color: #fff;
+      border-color: var(--ac)
+    }
+
+    button.d {
+      color: var(--bad)
+    }
+
+    input,
+    select {
+      font: inherit;
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid var(--ln);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--tx)
+    }
+
+    option:disabled {
+      color: var(--mu);
+      background: var(--tk)
+    }
+
+    label {
+      display: block;
+      font-size: .85rem;
+      color: var(--mu);
+      margin: 10px 0 4px
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    .row>input {
+      flex: 1 1 150px;
+      width: auto
+    }
+
+    .sp {
+      justify-content: space-between
+    }
+
+    .sub {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--ln)
+    }
+
+    .chip {
+      border-radius: 999px
+    }
+
+    .chip.on {
+      background: var(--ac);
+      color: #fff;
+      border-color: var(--ac)
+    }
+
+    .cal {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+      margin: 8px 0
+    }
+
+    .cal .wd {
+      font-size: .8rem;
+      color: var(--mu)
+    }
+
+    .day {
+      aspect-ratio: 1;
+      max-height: 60px;
+      padding: 0
+    }
+
+    .day.free {
+      border-color: var(--ok);
+      font-weight: 600
+    }
+
+    .day.sel {
+      background: var(--ac);
+      color: #fff;
+      border-color: var(--ac)
+    }
+
+    .day.full {
+      background: var(--tk);
+      color: var(--mu)
+    }
+
+    .day.off {
+      background: transparent;
+      color: var(--mu);
+      opacity: .45;
+      border-style: dashed
+    }
+
+    .day.today {
+      box-shadow: inset 0 0 0 2px var(--ac)
+    }
+
+    .lg {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: .8rem;
+      color: var(--mu)
+    }
+
+    .lg i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin-right: 4px;
+      vertical-align: -1px;
+      border: 1px solid var(--ln)
+    }
+
+    .mu {
+      color: var(--mu);
+      font-size: .9rem
+    }
+
+    .it {
+      padding: 10px 0;
+      border-top: 1px solid var(--ln)
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: .8rem;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 999px;
+      color: #fff
+    }
+
+    .b-confirmed {
+      background: var(--ok)
+    }
+
+    .b-pending {
+      background: var(--wa);
+      color: #3b2f00
+    }
+
+    .b-rejected,
+    .b-cancelled {
+      background: var(--bad)
+    }
+
+    .b-proposed {
+      background: var(--info)
+    }
+
+    .kv {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px
+    }
+
+    .k {
+      flex: 0 0 64px;
+      color: var(--mu);
+      font-size: .85rem;
+      padding-top: 2px
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 999px;
+      background: var(--ac);
+      color: #fff;
+      font-size: .9rem;
+      font-weight: 600;
+      margin: 4px 6px 0 0
+    }
+
+    .sw {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      color: var(--tx);
+      font-size: 1rem;
+      cursor: pointer
+    }
+
+    .sw input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0
+    }
+
+    .sw span {
+      width: 42px;
+      height: 24px;
+      border-radius: 12px;
+      background: var(--tk);
+      position: relative;
+      transition: .2s
+    }
+
+    .sw span::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      transition: .2s
+    }
+
+    .sw input:checked+span {
+      background: var(--ok)
+    }
+
+    .sw input:checked+span::after {
+      left: 21px
+    }
+
+    .sw input:focus-visible+span {
+      outline: 2px solid var(--ac);
+      outline-offset: 2px
+    }
+
+    details summary {
+      cursor: pointer;
+      color: var(--mu)
+    }
+
+    #ov {
+      position: fixed;
+      inset: 0;
+      background: #0009;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9
+    }
+
+    #ov .card {
+      max-width: 420px;
+      margin: 0
+    }
+
+    #msg {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--tx);
+      color: var(--bg);
+      padding: 10px 16px;
+      border-radius: 8px;
+      max-width: 90%;
+      z-index: 10
+    }
+
+    a {
+      color: var(--ac)
+    }
+
+    footer {
+      font-size: .85rem;
+      color: var(--mu)
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Termin anfragen</h1>
+    <div class="row"><button id="theme" title="Hell, Dunkel oder Geräteeinstellung">Design</button><button id="help"
+        title="Kurze Anleitung anzeigen">? Hilfe</button></div>
+  </header>
+  <main id="app"></main>
+  <footer><a href="#admin">Inhaber-Bereich</a> · <a href="#" id="wipe"
+      title="Löscht Name, E-Mail und Telefon aus diesem Browser">Gespeicherte Angaben löschen</a> · <a
+      href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a></footer>
+  <script>
+    const URL_ = 'https://stagzzgwplzyflpvyrgg.supabase.co', KEY = 'sb_publishable_xwt5nFpOk8jjQ7afgnKUvA_KbG-htP6', STEP = 30; // <- hier eintragen
+    const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const ls = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)) } catch { return null } };
+    const m0 = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) };
+    const S = { rng: [], hrs: [], od: {}, tags: [], old: [], busy: [], mine: [], all: [], month: m0(), day: null, pick: null, sel: new Set(), f: {}, adm: sessionStorage.getItem('adm') };
+    const WD = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+    const L = { pending: 'reserviert, wartet auf Bestätigung', confirmed: 'bestätigt', proposed: 'Änderung vorgeschlagen', rejected: 'abgelehnt', cancelled: 'storniert' };
+    const bd = s => `<span class="badge b-${s}">${L[s]}</span>`, hm = t => t.slice(0, 5), tgs = a => a.tags.map(t => `<span class="tag">${esc(t)}</span>`).join(''), end = a => fT(+new Date(a.start_at) + a.minutes * 6e4);
+    const fT = d => new Date(d).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }), fD = d => new Date(d).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }), fDT = d => fD(d) + ', ' + fT(d);
+    const fDay = s => new Date(s + 'T00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+    const dayKey = d => { d = new Date(d); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate() };
+    const add = (t, m) => { const [h, i] = t.split(':'), x = +h * 60 + +i + m; return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0') };
+    async function api(p, { method = 'GET', body } = {}) { const r = await fetch(URL_ + p, { method, headers: { apikey: KEY, ...(S.adm ? { Authorization: 'Bearer ' + S.adm } : {}), 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: body && JSON.stringify(body) }); const j = await r.json().catch(() => null); if (!r.ok) throw new Error(j?.message || j?.error_description || j?.msg || 'Fehler ' + r.status); return j }
+    const rpc = (f, a) => api('/rest/v1/rpc/' + f, { method: 'POST', body: a });
+    function toast(t) { let e = $('#msg'); if (!e) { e = document.createElement('div'); e.id = 'msg'; document.body.append(e) } e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => e.hidden = true, 4500) }
+    const wrap = f => async (...a) => { try { await f(...a) } catch (e) { if (/JWT|expired/i.test(e.message)) { S.adm = null; sessionStorage.removeItem('adm') } toast(e.message) } };
+    async function loadPub() {
+      const t = ls('tok') || [], today = new Date().toLocaleDateString('sv-SE'), od = {};
+      let o;[S.rng, S.hrs, o, S.tags, S.busy, S.mine] = await Promise.all([api('/rest/v1/release_ranges?to_day=gte.' + today + '&order=from_day'), api('/rest/v1/opening_hours?order=weekday,start_time'), api('/rest/v1/open_days'), api('/rest/v1/tags?active=eq.true&order=name'), rpc('public_slots', {}), t.length ? rpc('my_appointments', { p_tokens: t }) : []]);
+      o.forEach(r => od[r.weekday] = r.enabled); S.od = od
+    }
+    const refresh = wrap(async () => { await loadPub(); await view() });
+    function state(a) { if (a < Date.now()) return 'off'; const b = a + STEP * 6e4, o = S.busy.filter(x => +new Date(x.start_at) < b && +new Date(x.end_at) > a); return o.some(x => x.status === 'confirmed') ? 'taken' : o.length ? 'pending' : 'free' }
+    function days() {
+      const m = {}, ms = STEP * 6e4;
+      S.rng.forEach(r => {
+        for (let d = new Date(r.from_day + 'T00:00'), z = new Date(r.to_day + 'T00:00'); d <= z; d.setDate(d.getDate() + 1)) {
+          const wd = (d.getDay() + 6) % 7 + 1; if (!S.od[wd]) continue;
+          S.hrs.filter(h => h.weekday === wd).forEach(h => {
+            const [a, b] = h.start_time.split(':'), [c, e] = h.end_time.split(':'), Y = d.getFullYear(), M = d.getMonth(), D = d.getDate(), end = +new Date(Y, M, D, +c, +e);
+            for (let t = +new Date(Y, M, D, +a, +b); t + ms <= end; t += ms) { const l = (m[dayKey(t)] ??= { s: [] }).s; if (!l.includes(t)) l.push(t) }
+          })
+        }
+      });
+      for (const k in m) m[k].s.sort((a, b) => a - b); return m
+    }
+    function dayCls(s) { const st = s.map(state); return st.includes('free') ? 'free' : st.some(x => x !== 'off') ? 'full' : 'off' }
+    const view = () => location.hash === '#admin' ? wrap(admin)() : cust();
+    const TIP = { free: 'freie Zeiten vorhanden', full: 'ausgebucht', off: 'nicht verfügbar' };
+
+    function cust() {
+      if (S.pick && state(S.pick) !== 'free') S.pick = null;
+      const map = days(), y = S.month.getFullYear(), mo = S.month.getMonth(), first = (new Date(y, mo, 1).getDay() + 6) % 7, n = new Date(y, mo + 1, 0).getDate(), me = ls('me') || {}, v = k => esc(S.f[k] ?? me[k] ?? ''), tk = dayKey(new Date());
+      let cells = ''; for (let i = 0; i < first; i++)cells += '<span></span>';
+      for (let d = 1; d <= n; d++) { const k = y + '-' + mo + '-' + d, c = dayCls(map[k]?.s || []); cells += `<button class="day ${S.day === k ? 'sel' : c} ${k === tk ? 'today' : ''}" data-d="${k}" ${c === 'free' ? '' : 'disabled'} title="${TIP[c]}">${d}</button>` }
+      const ts = (map[S.day]?.s || []).filter(t => state(t) !== 'off'), sel = S.pick ? fDT(S.pick) : null;
+      const oh = WD.map((nm, i) => { const hs = S.od[i + 1] ? S.hrs.filter(h => h.weekday === i + 1) : []; return `<div class="row sp"><span>${nm}</span><span class="mu">${hs.length ? hs.map(h => hm(h.start_time) + ' bis ' + hm(h.end_time)).join(', ') : 'geschlossen'}</span></div>` }).join('');
+      $('#app').innerHTML = `
+ <div class="card"><h2>Was soll gemacht werden?</h2><p class="mu">Wähle eine oder mehrere Terminarten oder beschreibe unter „Sonstiges“ dein Anliegen. Den Zeitaufwand schätzt der Inhaber und blockiert bei der Bestätigung die passende Zeit.</p>
+ <div class="row">${S.tags.map(t => `<button class="chip ${S.sel.has(t.name) ? 'on' : ''}" data-t="${esc(t.name)}">${esc(t.name)}</button>`).join('')}<button class="chip ${S.sel.has('__other') ? 'on' : ''}" data-t="__other" title="Eigene Beschreibung eingeben">Sonstiges</button></div>
+ ${S.sel.has('__other') ? `<label>Worum geht es?</label><input data-f="other" maxlength="100" value="${esc(S.f.other || '')}" placeholder="Kurze Beschreibung">` : ''}</div>
+ <div class="card"><h2>Wann passt es?</h2>
+ <div class="row sp"><button id="pm" ${S.month > m0() ? '' : 'disabled'} title="Vorheriger Monat">◀</button><span class="row"><b>${S.month.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}</b><button id="td" title="Zum heutigen Tag springen">Heute</button></span><button id="nm" title="Nächster Monat">▶</button></div>
+ <div class="cal">${['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(x => `<span class="wd">${x}</span>`).join('')}${cells}</div>
+ <div class="lg"><span><i style="border-color:var(--ok)"></i>frei</span><span><i style="background:var(--tk)"></i>ausgebucht</span><span><i style="opacity:.45;border-style:dashed"></i>nicht verfügbar</span></div>
+ <label>Uhrzeit</label><select id="ts" ${S.day ? '' : 'disabled'}><option value="">${S.day ? 'Uhrzeit wählen' : 'Zuerst einen Tag wählen'}</option>${ts.map(t => { const s = state(t); return `<option value="${t}" ${S.pick === t ? 'selected' : ''} ${s === 'free' ? '' : 'disabled'}>${fT(t)}${s === 'free' ? '' : s === 'pending' ? ' (reserviert)' : ' (vergeben)'}</option>` }).join('')}</select></div>
+ <div class="card"><h2>Öffnungszeiten</h2><p class="mu">Termine sind nur zu diesen Zeiten möglich.${S.rng.length ? '' : ' Aktuell sind noch keine Termine freigegeben.'}</p>${oh}</div>
+ <div class="card"><h2>Deine Angaben</h2><p class="mu">${sel ? `Gewählt: <b>${sel}</b>` : 'Wähle zuerst Tag und Uhrzeit.'}</p>
+ <label>Name (Pflicht)</label><input data-f="name" value="${v('name')}" autocomplete="name">
+ <label>E-Mail</label><input data-f="email" type="email" value="${v('email')}" autocomplete="email">
+ <label>Handynummer (optional)</label><input data-f="phone" type="tel" value="${v('phone')}" autocomplete="tel">
+ <p class="mu">Mindestens E-Mail oder Telefon ist nötig. Deine Angaben gehen zur Bearbeitung an den Inhaber und werden in diesem Browser gemerkt.</p>
+ <button class="p" id="bk">Termin anfragen</button></div>
+ ${S.mine.length ? `<div class="card"><h2>Meine Termine</h2>${S.mine.map(a => `<div class="it"><b>${fDT(a.start_at)}</b>${a.status === 'confirmed' ? ` bis ${end(a)} Uhr` : ''} ${bd(a.status)}<div>${tgs(a)}</div>${a.cancel_reason ? `<div class="mu">Grund: ${esc(a.cancel_reason)}</div>` : ''}
+ ${a.status === 'proposed' ? `<p>Der Inhaber schlägt diesen Termin als Änderung vor (bis ${end(a)} Uhr).</p><div class="row"><button class="p" data-r="1" data-id="${a.id}">Annehmen</button><button data-r="0" data-id="${a.id}">Ablehnen</button></div>` : `<button class="d" data-c="${a.id}">${a.status === 'rejected' || a.status === 'cancelled' ? 'Entfernen' : 'Stornieren'}</button>`}</div>`).join('')}</div>` : ''}`
+    }
+
+    function endOpts(a) {
+      const st = +new Date(a.start_at), ms = STEP * 6e4, D = new Date(st), wd = (D.getDay() + 6) % 7 + 1, hs = S.hrs.filter(h => h.weekday === wd); let lim = st + 4 * 36e5;
+      if (hs.length) { const [c, e] = hs[hs.length - 1].end_time.split(':'); lim = Math.max(+new Date(D.getFullYear(), D.getMonth(), D.getDate(), +c, +e), st + ms) }
+      const cur = st + a.minutes * 6e4; let o = '';
+      for (let t = st + ms; t <= lim; t += ms) {
+        const bad = S.all.some(x => x.id !== a.id && x.status === 'confirmed' && +new Date(x.start_at) < t && +new Date(x.start_at) + x.minutes * 6e4 > st);
+        o += `<option value="${t}" ${t === cur ? 'selected' : ''} ${bad ? 'disabled' : ''}>${fT(t)}${bad ? ' (vergeben)' : ' · ' + (t - st) / 6e4 + ' Min.'}</option>`
+      }
+      return o
+    }
+    async function admin() {
+      if (!S.adm) { $('#app').innerHTML = `<div class="card" style="max-width:420px"><h2>Inhaber-Login</h2><label>E-Mail</label><input id="le" type="email"><label>Passwort</label><input id="lp" type="password"><p></p><div class="row"><button class="p" id="lg">Anmelden</button><a href="#">Zur Buchungsseite</a></div></div>`; return }
+      [S.all, S.old] = await Promise.all([api('/rest/v1/appointments?order=start_at'), api('/rest/v1/tags?active=eq.false&order=name')]);
+      const hrs = WD.map((nm, i) => {
+        const w = i + 1, on = S.od[w], hs = S.hrs.filter(h => h.weekday === w);
+        return `<div class="it"><div class="row sp"><label class="sw"><input type="checkbox" data-wd="${w}" ${on ? 'checked' : ''}><span></span><b>${nm}</b></label>${on ? `<button data-ah="${w}">+ Zeitraum</button>` : '<span class="mu">geschlossen</span>'}</div>
+  ${on ? hs.map(h => `<div class="row sub" style="border:0;margin-top:6px;padding-top:0"><input type="time" step="1800" data-hs="${h.id}" value="${hm(h.start_time)}" style="max-width:130px"> <span class="mu">bis</span> <input type="time" step="1800" data-he="${h.id}" value="${hm(h.end_time)}" style="max-width:130px"><button class="d" data-dh="${h.id}">Entfernen</button></div>`).join('') || '<p class="mu">Noch kein Zeitraum. Mit „+ Zeitraum“ hinzufügen.</p>' : ''}</div>`
+      }).join('');
+      $('#app').innerHTML = `<div class="card"><div class="row sp"><h2>Termine</h2><span class="row"><a href="#">Zur Buchungsseite</a><button id="out">Abmelden</button></span></div>
+ ${S.all.map(a => `<div class="it"><div class="row sp"><b>${fDT(a.start_at)}${a.status === 'pending' ? '' : ' bis ' + end(a) + ' Uhr'}</b>${bd(a.status)}</div><div class="kv"><span class="k">Name</span><span>${esc(a.name)}</span></div>${a.email ? `<div class="kv"><span class="k">E-Mail</span><a href="mailto:${esc(a.email)}">${esc(a.email)}</a></div>` : ''}${a.phone ? `<div class="kv"><span class="k">Mobil</span><a href="tel:${esc(a.phone)}">${esc(a.phone)}</a></div>` : ''}${a.cancel_reason ? `<div class="kv"><span class="k">Grund</span><span>${esc(a.cancel_reason)}</span></div>` : ''}<div style="margin-top:6px">${tgs(a)}</div>
+ <div class="row" style="margin-top:8px">${a.status === 'pending' ? `<span class="mu">Endet um</span><select id="m${a.id}" style="width:auto" title="Endzeit festlegen: Die Zeit bis dahin wird nach der Bestätigung gesperrt">${endOpts(a)}</select><span class="mu">Uhr</span><button class="p" data-ok="${a.id}">Bestätigen</button><button class="d" data-rj="${a.id}">Ablehnen</button>` : a.status === 'confirmed' ? `<button class="d" data-cx="${a.id}">Stornieren</button>` : `<button class="d" data-no="${a.id}">Löschen</button>`}</div>
+ ${a.status === 'pending' || a.status === 'confirmed' ? `<div class="row sub"><span class="mu">Alternativtermin:</span><input type="datetime-local" id="p${a.id}" title="Neuer Terminvorschlag"><button data-pr="${a.id}" title="Der Kunde sieht den Vorschlag und kann ihn annehmen">Änderung vorschlagen</button></div>` : ''}</div>`).join('') || '<p class="mu">Keine Termine.</p>'}</div>
+ <div class="card"><h2>Freigegebener Zeitraum</h2><p class="mu">Ganze Tage, von Tag bis Tag. Kunden können nur in freigegebenen Zeiträumen und zu den Öffnungszeiten (unten) anfragen.</p>
+ <div class="row"><span class="mu">Von</span><input type="date" id="r1"><span class="mu">bis</span><input type="date" id="r2"><button class="p" data-arng="1">Freigeben</button></div>
+ ${S.rng.map(r => `<div class="it row sp"><span>${fDay(r.from_day)} bis ${fDay(r.to_day)}</span><button class="d" data-drng="${r.id}">Entfernen</button></div>`).join('')}</div>
+ <div class="card"><h2>Öffnungszeiten</h2><p class="mu">Tage per Schalter aktivieren. Pro Tag sind mehrere Zeiträume möglich, z. B. wegen einer Mittagspause.</p>${hrs}</div>
+ <div class="card"><h2>Terminarten</h2><p class="mu">Kunden wählen daraus oder nutzen „Sonstiges“. Die Dauer legst du bei der Bestätigung fest.</p>
+ <div class="row"><input id="tn" placeholder="Name, z. B. Erstgespräch"><button class="p" data-at="1">Hinzufügen</button></div>
+ ${S.tags.map(t => `<div class="it row sp"><span>${esc(t.name)}</span><button class="d" data-dt="${t.id}">Entfernen</button></div>`).join('')}
+ <details class="it"><summary>Verlauf entfernter Terminarten (${S.old.length})</summary>${S.old.map(t => `<div class="it row sp"><span>${esc(t.name)}</span><span class="row"><button data-rt="${t.id}">Wiederherstellen</button><button class="d" data-xt="${t.id}">Endgültig löschen</button></span></div>`).join('') || '<p class="mu">Noch nichts entfernt.</p>'}</details></div>`
+    }
+
+    const TUT = ['Wähle die Terminart oder beschreibe unter „Sonstiges“ dein Anliegen. Den Zeitaufwand schätzt der Inhaber.', 'Wähle im Kalender einen Tag. Umrandete Tage haben freie Zeiten, graue sind ausgebucht oder nicht verfügbar. Danach wählst du die Uhrzeit innerhalb der Öffnungszeiten, reservierte oder vergebene Zeiten sind markiert.', 'Trage Name und E-Mail oder Telefon ein und frage den Termin an.', 'Unter „Meine Termine“ siehst du den Status ohne Login: gelb wartet auf Bestätigung, grün ist bestätigt, rot ist abgelehnt oder storniert. Bei einem Änderungsvorschlag kannst du annehmen oder ablehnen.'];
+    function tut(i) {
+      let o = $('#ov'); if (i === null) { o && o.remove(); ls('tut', 1); return } if (!o) { o = document.createElement('div'); o.id = 'ov'; document.body.append(o) }
+      o.innerHTML = i < 0 ? `<div class="card"><h2>Willkommen</h2><p>Hier kannst du ohne Konto Termine anfragen. Möchtest du eine kurze Einführung?</p><div class="row"><button class="p" data-tu="0">Einführung ansehen</button><button data-tu="x">Überspringen</button></div></div>`
+        : `<div class="card"><p class="mu">Schritt ${i + 1} von ${TUT.length}</p><p>${TUT[i]}</p><div class="row"><button data-tu="${i - 1}" ${i ? '' : 'disabled'}>Zurück</button><button class="p" data-tu="${i + 1 < TUT.length ? i + 1 : 'x'}">${i + 1 < TUT.length ? 'Weiter' : 'Fertig'}</button><button data-tu="x">Überspringen</button></div></div>`
+    }
+
+    const TH = ['auto', 'light', 'dark'], TL = { auto: 'Auto', light: 'Hell', dark: 'Dunkel' };
+    function theme(t) { const r = document.documentElement; t === 'auto' ? r.removeAttribute('data-theme') : r.dataset.theme = t; $('#theme').textContent = 'Design: ' + TL[t] }
+    let th = ls('th') || 'auto'; theme(th);
+
+    document.addEventListener('input', e => { if (e.target.dataset.f) S.f[e.target.dataset.f] = e.target.value });
+    const P = '/rest/v1/', q = (t, i, k = 'id') => P + t + '?' + k + '=eq.' + i;
+    document.addEventListener('change', wrap(async e => {
+      const t = e.target, d = t.dataset;
+      if (t.id === 'ts') { S.pick = +t.value || null; return view() }
+      if (d.wd) { await api(q('open_days', d.wd, 'weekday'), { method: 'PATCH', body: { enabled: t.checked } }); return refresh() }
+      if (d.hs || d.he) {
+        const id = d.hs || d.he, h = S.hrs.find(x => x.id === id), s = d.hs ? t.value : hm(h.start_time), en = d.he ? t.value : hm(h.end_time);
+        if (!s || !en || en <= s) { refresh(); throw new Error('Das Ende muss nach dem Beginn liegen.') }
+        await api(q('opening_hours', id), { method: 'PATCH', body: { start_time: s, end_time: en } }); toast('Gespeichert.'); return refresh()
+      }
+    }));
+    document.addEventListener('click', wrap(async e => {
+      const b = e.target.closest('button,a'); if (!b) return; const d = b.dataset, id = b.id, val = x => $('#' + x).value;
+      if (d.tu !== undefined) return tut(d.tu === 'x' ? null : +d.tu);
+      if (id === 'help') return tut(-1);
+      if (id === 'theme') { th = TH[(TH.indexOf(th) + 1) % 3]; ls('th', th); return theme(th) }
+      if (id === 'wipe') { e.preventDefault(); ls('me', null); ls('tok', null); S.f = {}; S.mine = []; toast('Gespeicherte Angaben gelöscht.'); return view() }
+      if (d.t) { S.sel.has(d.t) ? S.sel.delete(d.t) : S.sel.add(d.t); return view() }
+      if (d.d) { S.day = d.d; S.pick = null; return view() }
+      if (id === 'pm' || id === 'nm') { S.month = new Date(S.month.getFullYear(), S.month.getMonth() + (id === 'pm' ? -1 : 1), 1); S.day = null; S.pick = null; return view() }
+      if (id === 'td') { S.month = m0(); const k = dayKey(new Date()), mp = days()[k]; S.day = mp && dayCls(mp.s) === 'free' ? k : null; S.pick = null; return view() }
+      if (id === 'bk') {
+        const f = { ...(ls('me') || {}), ...S.f }, tg = [...S.sel].filter(x => x !== '__other');
+        if (S.sel.has('__other')) { const o = (S.f.other || '').trim(); if (!o) throw new Error('Bitte beschreibe unter „Sonstiges“, worum es geht.'); tg.push('Sonstiges: ' + o.slice(0, 100)) }
+        if (!tg.length) throw new Error('Bitte eine Terminart wählen.'); if (!S.pick) throw new Error('Bitte Tag und Uhrzeit wählen.');
+        const tok = await rpc('book', { p_start: new Date(S.pick).toISOString(), p_tags: tg, p_name: f.name || '', p_email: f.email || '', p_phone: f.phone || '' });
+        ls('me', { name: f.name, email: f.email, phone: f.phone }); ls('tok', [...(ls('tok') || []), tok]); S.pick = null; S.sel.clear(); S.f.other = ''; toast('Angefragt. Der Termin ist reserviert und wartet auf Bestätigung.'); return refresh()
+      }
+      const tkn = x => S.mine.find(a => a.id === x)?.token;
+      if (d.r !== undefined) { await rpc('respond', { p_id: d.id, p_token: tkn(d.id), p_accept: d.r === '1' }); return refresh() }
+      if (d.c) { if (confirm('Wirklich entfernen?')) { await rpc('cancel', { p_id: d.c, p_token: tkn(d.c) }); return refresh() } return }
+      if (id === 'lg') { const r = await api('/auth/v1/token?grant_type=password', { method: 'POST', body: { email: val('le'), password: val('lp') } }); S.adm = r.access_token; sessionStorage.setItem('adm', S.adm); return refresh() }
+      if (id === 'out') { S.adm = null; sessionStorage.removeItem('adm'); return refresh() }
+      const ap = x => S.all.find(a => a.id === x),
+        ov = (i, st, mi) => S.all.some(x => x.id !== i && x.status === 'confirmed' && +new Date(x.start_at) < st + mi * 6e4 && +new Date(x.start_at) + x.minutes * 6e4 > st),
+        mins = i => $('#m' + i) ? Math.round((+val('m' + i) - +new Date(ap(i).start_at)) / 6e4) : ap(i).minutes, tg = x => S.tags.find(t => t.id === x)?.name;
+      if (d.ok) { const mi = mins(d.ok); if (mi < 5) throw new Error('Bitte eine Endzeit wählen.'); if (ov(d.ok, +new Date(ap(d.ok).start_at), mi)) throw new Error('Überschneidet sich mit einem bestätigten Termin.'); await api(q('appointments', d.ok), { method: 'PATCH', body: { status: 'confirmed', minutes: mi } }) }
+      else if (d.rj) await api(q('appointments', d.rj), { method: 'PATCH', body: { status: 'rejected' } });
+      else if (d.cx) { const r0 = prompt('Grund der Stornierung (wird dem Kunden angezeigt):'); if (r0 === null) return; const r = r0.trim(); if (!r) throw new Error('Bitte einen Grund für die Stornierung angeben.'); await api(q('appointments', d.cx), { method: 'PATCH', body: { status: 'cancelled', cancel_reason: r.slice(0, 300) } }) }
+      else if (d.no) { if (!confirm('Wirklich löschen?')) return; await api(q('appointments', d.no), { method: 'DELETE' }) }
+      else if (d.pr) { const v = val('p' + d.pr); if (!v) throw new Error('Bitte neuen Zeitpunkt wählen.'); const st = new Date(v), mi = mins(d.pr); if (ov(d.pr, +st, mi)) throw new Error('Überschneidet sich mit einem bestätigten Termin.'); await api(q('appointments', d.pr), { method: 'PATCH', body: { start_at: st.toISOString(), status: 'proposed', minutes: mi } }) }
+      else if (d.arng) { const a = val('r1'), z = val('r2'); if (!a || !z || z < a) throw new Error('Bitte Von- und Bis-Tag wählen (Ende nicht vor Beginn).'); await api(P + 'release_ranges', { method: 'POST', body: { from_day: a, to_day: z } }) }
+      else if (d.drng) await api(q('release_ranges', d.drng), { method: 'DELETE' });
+      else if (d.ah) { const w = +d.ah, l = S.hrs.filter(h => h.weekday === w).pop(); let s = '09:00', en = '17:00'; if (l) { s = add(hm(l.end_time), 60); en = add(s, 240) } if (en > '23:30') en = '23:30'; if (s >= '23:30') throw new Error('Kein Platz mehr für einen weiteren Zeitraum.'); await api(P + 'opening_hours', { method: 'POST', body: { weekday: w, start_time: s, end_time: en } }) }
+      else if (d.dh) await api(q('opening_hours', d.dh), { method: 'DELETE' });
+      else if (d.at) {
+        const n = val('tn').trim(); if (!n) throw new Error('Bitte einen Namen angeben.');
+        if (S.tags.some(t => t.name.toLowerCase() === n.toLowerCase())) throw new Error('Diese Terminart gibt es bereits.');
+        if (S.old.some(t => t.name.toLowerCase() === n.toLowerCase())) throw new Error('Diese Terminart gibt es im Verlauf. Stelle sie dort wieder her.');
+        await api(P + 'tags', { method: 'POST', body: { name: n } })
+      }
+      else if (d.dt) { if (!confirm(`Terminart „${tg(d.dt)}“ wirklich entfernen?\nSie wird für Kunden ausgeblendet und landet im Verlauf. Dort kannst du sie wiederherstellen.`)) return; await api(q('tags', d.dt), { method: 'PATCH', body: { active: false } }) }
+      else if (d.rt) { if (S.tags.some(t => t.name === S.old.find(o => o.id === d.rt)?.name)) throw new Error('Es gibt bereits eine aktive Terminart mit diesem Namen.'); await api(q('tags', d.rt), { method: 'PATCH', body: { active: true } }) }
+      else if (d.xt) { if (!confirm('Diese Terminart endgültig löschen? Das kann nicht rückgängig gemacht werden.')) return; await api(q('tags', d.xt), { method: 'DELETE' }) }
+      else return;
+      return refresh()
+    }));
+    addEventListener('hashchange', () => refresh());
+    refresh(); if (!ls('tut')) tut(-1);
+  </script>
+</body>
+
+</html>
